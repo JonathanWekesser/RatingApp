@@ -5,7 +5,7 @@ const cors = require("cors");
 const port = 8080;
 const filename = __dirname + "/profs.json";
 
-//Middleware
+//Middleware test
 app.use(express.json()); //for parsing application/json
 app.use(cors()); //for configuring Cross-Origin Resource Sharing (CORS)
 function log(req, res, next) {
