@@ -47,14 +47,19 @@ app.get("/profs/:id", async function (req, res) {
 });
 
 app.put("/profs/:id", async function (req, res) {
-    const collection = db.collection(collectionName);
-    const updatedProf = {
-        name: req.body.name,
-        rating: req.body.rating,
-    };
-    const result = await collection.updateOne({ id: parseInt(req.params.id) }, { $set: updatedProf });
-    res.status(200).json({ message: `${result.modifiedCount} prof(s) updated` });
-    
+    const profId = req.params.id;
+    const query = {}
+    let queryResult = await collection.find(query).toArray();
+    const filter = { id: profId };
+    const options = { upsert: true };
+    const updateDoc = {
+        $set: {
+          rating: req.body.rating,
+        },
+      };
+    await collection.updateOne(filter, updateDoc, options);
+    queryResult = await collection.find(query).toArray();
+    res.status(200).send(queryResult);
 });
 
 app.delete("/profs/:id", async function (req, res) {
