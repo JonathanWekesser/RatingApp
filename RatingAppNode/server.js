@@ -2,6 +2,8 @@ require('dotenv').config();
 const { MongoClient, ObjectId } = require('mongodb');
 const url = process.env.COSMOS_CONNECTION_STRING;
 const client = new MongoClient(url);
+let db;
+let collection;
 
 const express = require("express");
 const app = express();
@@ -21,27 +23,15 @@ app.use(log);
 
 async function initDB(){
     await client.connect();
-    const db = client.db(`prof-rating-app`);
+    db = client.db(`prof-rating-app`);
     console.log(`New database:\t${db.databaseName}\n`);
-    const collection = db.collection('profs');
+    collection = db.collection('profs');
     console.log(`New collection:\t${collection.collectionName}\n`);
 }
 
 // new Endpoints
 async function getProfs(req, res) {
     console.log("Getting all Professors");
-}
-
-async function addProfs(req, res) {
-    let professor = {
-        name: req.body.name,
-        rating: req.body.rating,
-    };
-    const query = { name: professor.name, rating: professor.rating };
-    const update = { $set: professor };
-    const options = {upsert: true, new: true};
-    const upsertProfessor = await collection.updateOne(query, update, options);
-    console.log(`upsertProfessor: ${JSON.stringify(upsertProfessor)}\n`);
 }
 
 //Endpoints
@@ -86,7 +76,15 @@ app.delete("/profs/:id", function (req, res) {
     });
 });
 
-app.post("/profs", function (req, res) {
+app.post("/profs", async function (req, res) {
+    // Create a document to insert
+    const prof = {
+        name: req.body.name,
+        rating: req.body.rating,
+    }
+    const result = await collection.insertOne(prof);
+    console.log(`Added a new professor with ${result}`);
+    res.send(result);
     /*
     fs.readFile(filename, "utf8", function (err, data) {
         let dataAsObject = JSON.parse(data);
@@ -103,7 +101,6 @@ app.post("/profs", function (req, res) {
         });
     });
     */
-   addProfs(req, res);
 });
 
 initDB();
