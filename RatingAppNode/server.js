@@ -37,13 +37,13 @@ connectToDatabase();
 app.get("/profs", async function (req, res) {
     const collection = db.collection(collectionName);
     const data = await collection.find({}).toArray();
-    res.json(data);
+    res.status(200).json(data);
 });
 
 app.get("/profs/:id", async function (req, res) {
     const collection = db.collection(collectionName);
     const data = await collection.findOne({ _id: parseInt(req.params.id) });
-    res.json(data);
+    res.status(200).json(data);
 });
 
 app.put("/profs/:id", async function (req, res) {
@@ -53,7 +53,7 @@ app.put("/profs/:id", async function (req, res) {
         rating: req.body.rating,
     };
     const result = await collection.updateOne({ _id: parseInt(req.params.id) }, { $set: updatedProf });
-    res.json({ message: `${result.modifiedCount} prof(s) updated` });
+    res.status(200).json({ message: `${result.modifiedCount} prof(s) updated` });
     
 });
 
@@ -61,7 +61,7 @@ app.delete("/profs/:id", async function (req, res) {
     const collection = db.collection(collectionName);
 
     const result = await collection.deleteOne({ _id: parseInt(req.params.id) });
-    res.json({ message: `${result.deletedCount} prof(s) deleted` });
+    res.status(200).json({ message: `${result.deletedCount} prof(s) deleted` });
 });
 
 app.post("/profs", async function (req, res) {
