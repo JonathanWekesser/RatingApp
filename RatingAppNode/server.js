@@ -57,7 +57,7 @@ app.put("/profs/:id", async function (req, res) {
           rating: req.body.rating,
         },
       };
-    await collection.updateOne(filter, updateDoc, options);
+    const result = await collection.updateOne(filter, updateDoc, options);
     queryResult = await collection.find(query).toArray();
     res.status(200).send(queryResult);
 });
