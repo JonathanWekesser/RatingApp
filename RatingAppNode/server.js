@@ -1,3 +1,8 @@
+require('dotenv').config();
+const { MongoClient, ObjectId } = require('mongodb');
+const url = process.env.COSMOS_CONNECTION_STRING;
+const client = new MongoClient(url);
+
 const express = require("express");
 const app = express();
 const fs = require("fs");
@@ -14,15 +19,35 @@ function log(req, res, next) {
 }
 app.use(log);
 
+async function initDB(){
+    await client.connect();
+    const db = client.db(`prof-rating-app`);
+    console.log(`New database:\t${db.databaseName}\n`);
+    const collection = db.collection('profs');
+    console.log(`New collection:\t${collection.collectionName}\n`);
+    
+}
+
+// new Endpoints
+async function getProfs() {
+
+}
+
+async function addProfs(req, res) {
+    let professor = {
+        name: req.body.name,
+        rating: req.body.rating,
+    };
+    const query = { name: professor.name, rating: professor.rating };
+    const update = { $set: professor };
+    const options = {upsert: true, new: true};
+    const upsertProfessor = await collection.updateOne(query, update, options);
+    console.log(`upsertResult1: ${JSON.stringify(upsertResult1)}\n`);
+}
 
 //Endpoints
 app.get("/profs", function (req, res) {
-    fs.readFile(filename, "utf8", function (err, data) {
-        res.writeHead(200, {
-            "Content-Type": "application/json",
-        });
-        res.end(data);
-    });
+    getProfs();
 });
 
 app.get("/profs/:id", function (req, res) {
@@ -63,6 +88,7 @@ app.delete("/profs/:id", function (req, res) {
 });
 
 app.post("/profs", function (req, res) {
+    /*
     fs.readFile(filename, "utf8", function (err, data) {
         let dataAsObject = JSON.parse(data);
         dataAsObject.push({
@@ -77,6 +103,9 @@ app.post("/profs", function (req, res) {
             res.end(JSON.stringify(dataAsObject));
         });
     });
+    */
+   addProfs(req, res);
 });
 
+initDB();
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
