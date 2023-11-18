@@ -84,7 +84,7 @@ app.post("/profs", async function (req, res) {
     }
     const result = await collection.insertOne(prof);
     console.log(`Added a new professor with ${result}`);
-    res.send(result);
+    res.status(200).send(result);
     /*
     fs.readFile(filename, "utf8", function (err, data) {
         let dataAsObject = JSON.parse(data);
