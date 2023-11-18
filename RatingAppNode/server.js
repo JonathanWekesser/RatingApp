@@ -42,7 +42,7 @@ app.get("/profs", async function (req, res) {
 
 app.get("/profs/:id", async function (req, res) {
     const collection = db.collection(collectionName);
-    const data = await collection.findOne({ _id: parseInt(req.params.id) });
+    const data = await collection.findOne({ id: parseInt(req.params.id) });
     res.status(200).json(data);
 });
 
@@ -52,21 +52,20 @@ app.put("/profs/:id", async function (req, res) {
         name: req.body.name,
         rating: req.body.rating,
     };
-    const result = await collection.updateOne({ _id: parseInt(req.params.id) }, { $set: updatedProf });
+    const result = await collection.updateOne({ id: parseInt(req.params.id) }, { $set: updatedProf });
     res.status(200).json({ message: `${result.modifiedCount} prof(s) updated` });
     
 });
 
 app.delete("/profs/:id", async function (req, res) {
     const collection = db.collection(collectionName);
-    try {
-        const result = await collection.deleteOne({ _id: parseInt(req.params.id) });
-        res.status(200).json({ message: `${result.deletedCount} prof(s) deleted` });   
-    } catch (error) {
-        console.error("Error deleting document:", error);
-        res.status(500).json({ error: "Failed to delete document" });
-    }
-    
+    const profId = req.params.id;
+    const query = {}
+    let queryResult = await collection.find(query).toArray();
+    const toBeDeleted = queryResult[profId];
+    await collection.deleteOne({ id: toBeDeleted.id });
+    queryResult = await collection.find(query).toArray();
+    res.status(200).json(queryResult);
 });
 
 app.post("/profs", async function (req, res) {
