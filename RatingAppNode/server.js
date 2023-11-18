@@ -25,12 +25,11 @@ async function initDB(){
     console.log(`New database:\t${db.databaseName}\n`);
     const collection = db.collection('profs');
     console.log(`New collection:\t${collection.collectionName}\n`);
-    
 }
 
 // new Endpoints
-async function getProfs() {
-
+async function getProfs(req, res) {
+    console.log("Getting all Professors");
 }
 
 async function addProfs(req, res) {
@@ -47,7 +46,7 @@ async function addProfs(req, res) {
 
 //Endpoints
 app.get("/profs", function (req, res) {
-    getProfs();
+    getProfs(req, res);
 });
 
 app.get("/profs/:id", function (req, res) {
