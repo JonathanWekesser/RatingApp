@@ -42,7 +42,7 @@ async function addProfs(req, res) {
     const update = { $set: professor };
     const options = {upsert: true, new: true};
     const upsertProfessor = await collection.updateOne(query, update, options);
-    console.log(`upsertResult1: ${JSON.stringify(upsertResult1)}\n`);
+    console.log(`upsertProfessor: ${JSON.stringify(upsertProfessor)}\n`);
 }
 
 //Endpoints
