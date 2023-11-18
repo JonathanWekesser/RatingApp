@@ -59,9 +59,14 @@ app.put("/profs/:id", async function (req, res) {
 
 app.delete("/profs/:id", async function (req, res) {
     const collection = db.collection(collectionName);
-
-    const result = await collection.deleteOne({ _id: parseInt(req.params.id) });
-    res.status(200).json({ message: `${result.deletedCount} prof(s) deleted` });
+    try {
+        const result = await collection.deleteOne({ _id: parseInt(req.params.id) });
+        res.status(200).json({ message: `${result.deletedCount} prof(s) deleted` });   
+    } catch (error) {
+        console.error("Error deleting document:", error);
+        res.status(500).json({ error: "Failed to delete document" });
+    }
+    
 });
 
 app.post("/profs", async function (req, res) {
@@ -70,19 +75,10 @@ app.post("/profs", async function (req, res) {
         name: req.body.name,
         rating: req.body.rating,
     };
-
-    try {
-        const result = await collection.insertOne(newProf);
-
-        if (result.ops && result.ops.length > 0) {
-            res.status(200).json(result.ops[0]);
-        } else {
-            res.status(500).json({ error: "Failed to insert document" });
-        }
-    } catch (error) {
-        console.error("Error inserting document:", error);
-        res.status(500).json({ error: "Failed to insert document" });
-    }
+    const result = await collection.insertOne(newProf);
+    const query = {};
+    const queryResult = await collection.find(query).toArray();
+    res.status(200).json(queryResult);
 });
 
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
