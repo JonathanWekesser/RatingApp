@@ -75,7 +75,7 @@ app.post("/profs", async function (req, res) {
         const result = await collection.insertOne(newProf);
 
         if (result.ops && result.ops.length > 0) {
-            res.json(result.ops[0]);
+            res.status(200).json(result.ops[0]);
         } else {
             res.status(500).json({ error: "Failed to insert document" });
         }
