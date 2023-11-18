@@ -1,16 +1,13 @@
-require('dotenv').config();
-const { MongoClient, ObjectId } = require('mongodb');
-const url = process.env.COSMOS_CONNECTION_STRING;
-const client = new MongoClient(url);
-let db;
-let collection;
-
 const express = require("express");
 const app = express();
-const fs = require("fs");
+const {MongoClient} = require("mongodb");
 const cors = require("cors");
 const port = 8080;
-const filename = __dirname + "/profs.json";
+
+const mongoURI = "mongodb://localhost:27017";
+const dbName = "prof-rating-app";
+const collectionName = "profs";
+
 
 //Middleware test
 app.use(express.json()); //for parsing application/json
@@ -21,87 +18,66 @@ function log(req, res, next) {
 }
 app.use(log);
 
-async function initDB(){
-    await client.connect();
-    db = client.db(`prof-rating-app`);
-    console.log(`New database:\t${db.databaseName}\n`);
-    collection = db.collection('profs');
-    console.log(`New collection:\t${collection.collectionName}\n`);
+let db;
+
+async function connectToDatabase() {
+    const client = new MongoClient(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
+    try {
+        await client.connect();
+        console.log("Connected to the database");
+        db = client.db(dbName);
+    } catch (err) {
+        console.error("Error connecting to the database:", err);
+    }
 }
 
-// new Endpoints
-async function getProfs(req, res) {
-    console.log("Getting all Professors");
-}
+connectToDatabase();
 
 //Endpoints
-app.get("/profs", function (req, res) {
-    getProfs(req, res);
+app.get("/profs", async function (req, res) {
+    const collection = db.collection(collectionName);
+    const data = await collection.find({}).toArray();
+    res.status(200).json(data);
 });
 
-app.get("/profs/:id", function (req, res) {
-    fs.readFile(filename, "utf8", function (err, data) {
-        const dataAsObject = JSON.parse(data)[req.params.id];
-        res.writeHead(200, {
-            "Content-Type": "application/json",
-        });
-        res.end(JSON.stringify(dataAsObject));
-    });
+app.get("/profs/:id", async function (req, res) {
+    const collection = db.collection(collectionName);
+    const data = await collection.findOne({ id: parseInt(req.params.id) });
+    res.status(200).json(data);
 });
 
-app.put("/profs/:id", function (req, res) {
-    fs.readFile(filename, "utf8", function (err, data) {
-        let dataAsObject = JSON.parse(data);
-        dataAsObject[req.params.id].name = req.body.name;
-        dataAsObject[req.params.id].rating = req.body.rating;
-        fs.writeFile(filename, JSON.stringify(dataAsObject), () => {
-            res.writeHead(200, {
-                "Content-Type": "application/json",
-            });
-            res.end(JSON.stringify(dataAsObject));
-        });
-    });
+app.put("/profs/:id", async function (req, res) {
+    const collection = db.collection(collectionName);
+    const updatedProf = {
+        name: req.body.name,
+        rating: req.body.rating,
+    };
+    const result = await collection.updateOne({ id: parseInt(req.params.id) }, { $set: updatedProf });
+    res.status(200).json({ message: `${result.modifiedCount} prof(s) updated` });
+    
 });
 
-app.delete("/profs/:id", function (req, res) {
-    fs.readFile(filename, "utf8", function (err, data) {
-        let dataAsObject = JSON.parse(data);
-        dataAsObject.splice(req.params.id, 1);
-        fs.writeFile(filename, JSON.stringify(dataAsObject), () => {
-            res.writeHead(200, {
-                "Content-Type": "application/json",
-            });
-            res.end(JSON.stringify(dataAsObject));
-        });
-    });
+app.delete("/profs/:id", async function (req, res) {
+    const collection = db.collection(collectionName);
+    const profId = req.params.id;
+    const query = {}
+    let queryResult = await collection.find(query).toArray();
+    const toBeDeleted = queryResult[profId];
+    await collection.deleteOne({ id: toBeDeleted.id });
+    queryResult = await collection.find(query).toArray();
+    res.status(200).json(queryResult);
 });
 
 app.post("/profs", async function (req, res) {
-    // Create a document to insert
-    const prof = {
+    const collection = db.collection(collectionName);
+    const newProf = {
         name: req.body.name,
         rating: req.body.rating,
-    }
-    const result = await collection.insertOne(prof);
-    console.log(`Added a new professor with ${result}`);
-    res.status(200).send(result);
-    /*
-    fs.readFile(filename, "utf8", function (err, data) {
-        let dataAsObject = JSON.parse(data);
-        dataAsObject.push({
-            id: dataAsObject.length,
-            name: req.body.name,
-            rating: req.body.rating,
-        });
-        fs.writeFile(filename, JSON.stringify(dataAsObject), () => {
-            res.writeHead(200, {
-                "Content-Type": "application/json",
-            });
-            res.end(JSON.stringify(dataAsObject));
-        });
-    });
-    */
+    };
+    const result = await collection.insertOne(newProf);
+    const query = {};
+    const queryResult = await collection.find(query).toArray();
+    res.status(200).json(queryResult);
 });
 
-initDB();
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
